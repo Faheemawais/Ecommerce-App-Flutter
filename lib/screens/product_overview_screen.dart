@@ -44,7 +44,7 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
   Widget build(BuildContext context) {
     final cart = Provider.of<Cart>(context, listen: false);
     return Scaffold(appBar: AppBar(
-      title: const Text('My Shop'),
+      title: const Text('Buy&Bye'),
       actions: <Widget>[
         PopupMenuButton(
           onSelected: (FilterOptions selectedValue) {
@@ -59,10 +59,10 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
 
           },
           itemBuilder: (_) => [
-            PopupMenuItem(child: Text('Only Favorites'), value: FilterOptions.Favorits,),
-            PopupMenuItem(child: Text('Show All'), value: FilterOptions.All,)
+            const PopupMenuItem(value: FilterOptions.Favorits,child: Text('Only Favorites'),),
+            const PopupMenuItem(value: FilterOptions.All,child: Text('Show All'),)
           ],
-        icon: Icon(Icons.more_vert),
+        icon: const Icon(Icons.more_vert),
         ),
         Consumer<Cart>(
           builder: (_, cartData,ch) => Badgee(
@@ -70,7 +70,7 @@ class _ProductOverviewScreenState extends State<ProductOverviewScreen> {
           child: ch as Widget,
           ),
           child:IconButton(
-          icon: Icon(Icons.shopping_cart,),
+          icon: const Icon(Icons.shopping_cart,),
           onPressed: () {
             Navigator.of(context).pushNamed(CartScreen.routeName);
           },

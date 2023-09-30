@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shop_app/screens/edit_product_screen.dart';
 
-
+import './screens/splash_screen.dart';
+import './providers/auth.dart';
+import './screens/edit_product_screen.dart';
 import './providers/cart.dart';
 import './screens/orders_screen.dart';
 import './providers/orders.dart';
@@ -11,6 +12,7 @@ import './providers/products_provider.dart';
 import './screens/product_overview_screen.dart';
 import './screens/product_detail_screen.dart';
 import './screens/user_products_screen.dart';
+import './screens/auth_screen.dart';
 
 void main() => runApp(MyApp());
 
@@ -20,17 +22,26 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(providers: [
-        ChangeNotifierProvider.value(
-        value: ProductsProvider(),
-        ),
+      ChangeNotifierProvider.value(
+        value: Auth(),
+      ),
+        ChangeNotifierProxyProvider<Auth, ProductsProvider>(update: (ctx, auth, previousProducts) => ProductsProvider(
+          auth.token,
+          auth.userId,
+          previousProducts == null ? [] : previousProducts.items,
+        ), create: (_) => ProductsProvider(null, null, []),
+      ),
         ChangeNotifierProvider.value(
           value: Cart(),
         ),
-      ChangeNotifierProvider.value(
-        value: Orders(),
+      ChangeNotifierProxyProvider<Auth, Orders>(update: (ctx, auth, previousOrders) => Orders(
+        auth.token,
+        auth.userId,
+        previousOrders == null ? [] : previousOrders.orders,
+      ), create: (_) => Orders(null, null, []),
       ),
     ],
-      child: MaterialApp(
+      child: Consumer<Auth>(builder: (ctx, auth, _) => MaterialApp(
         title: 'MyShop',
         theme: ThemeData(
           colorScheme: ThemeData.light().colorScheme.copyWith(
@@ -42,12 +53,12 @@ class MyApp extends StatelessWidget {
           textTheme: ThemeData.light().textTheme.copyWith(
           bodyText1: TextStyle(color: Color.fromRGBO(20, 51, 51, 1)),
           bodyText2: TextStyle(color: Color.fromRGBO(20, 51, 51, 1)),
-          headline1: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Lato'),
-          headline2: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Anton'),
-          headline3: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Anton'),
-          headline4: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, fontFamily: 'Anton'),
-          headline5: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, fontFamily: 'Lato', color: Colors.white ),
-          headline6: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Anton'),
+          headline1: TextStyle(fontSize: 20, fontFamily: 'Lato'),
+          headline2: TextStyle(fontSize: 18,  fontFamily: 'Anton'),
+          headline3: TextStyle(fontSize: 16,  fontFamily: 'Anton'),
+          headline4: TextStyle(fontSize: 16,  fontFamily: 'Anton'),
+          headline5: TextStyle(fontSize: 22,  fontFamily: 'Lato', color: Colors.white ),
+          headline6: TextStyle(fontSize: 14,  fontFamily: 'Anton'),
           subtitle1: TextStyle(fontSize: 16),
           subtitle2: TextStyle(fontSize: 14),
           caption: TextStyle(fontSize: 12),
@@ -55,7 +66,10 @@ class MyApp extends StatelessWidget {
           overline: TextStyle(fontSize: 10),
           ),
         ),
-        home: ProductOverviewScreen(),
+        home: auth.isAuth ? ProductOverviewScreen() : FutureBuilder(
+            future: auth.tryAutoLogin(),
+            builder: (ctx, authResultSnapshot) => authResultSnapshot.connectionState == ConnectionState.waiting ? SplashScreen() : AuthScreen(),
+        ),
         routes: {
           ProductDetailScreen.routName: (ctx) => ProductDetailScreen(),
           CartScreen.routeName: (ctx) => CartScreen(),
@@ -63,6 +77,7 @@ class MyApp extends StatelessWidget {
           UserProductsScreen.routeName: (ctx) => UserProductsScreen(),
           EditProductScreen.routeName: (ctx) => EditProductScreen(),
         },
+      ),
       ),
     );
   }
